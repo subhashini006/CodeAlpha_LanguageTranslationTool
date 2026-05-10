@@ -1,10 +1,12 @@
 import streamlit as st
 from deep_translator import GoogleTranslator
+from gtts import gTTS
+import speech_recognition as sr
 
-# Page Config
+# Page Configuration
 st.set_page_config(
-    page_title="AI Language Translator",
-    page_icon="🌍",
+    page_title="AI Voice Translator",
+    page_icon="🌐",
     layout="centered"
 )
 
@@ -12,117 +14,190 @@ st.set_page_config(
 st.markdown("""
 <style>
 
+/* Remove Header Space */
+header {
+    visibility: hidden;
+}
+
+.main .block-container {
+    padding-top: 0rem;
+    padding-bottom: 1rem;
+}
+
+/* Background */
 .stApp {
-    background: linear-gradient(135deg, #667eea, #764ba2, #ff6ec4);
-    background-size: 400% 400%;
-    animation: gradient 12s ease infinite;
+    background: linear-gradient(to right, #0f2027, #203a43, #2c5364);
+    min-height: 100vh;
     color: white;
 }
 
-@keyframes gradient {
-    0% {background-position: 0% 50%;}
-    50% {background-position: 100% 50%;}
-    100% {background-position: 0% 50%;}
-}
-
-.main-box {
-    background: rgba(255,255,255,0.15);
-    padding: 30px;
-    border-radius: 20px;
-    backdrop-filter: blur(10px);
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
-}
-
+/* Title */
 h1 {
     text-align: center;
-    color: white;
-    font-size: 50px;
+    color: #00d4ff;
+    font-size: 52px;
     font-weight: bold;
+    margin-bottom: 30px;
+    margin-top: 10px;
 }
 
+/* Labels */
+label {
+    color: white !important;
+    font-size: 18px !important;
+    font-weight: 600;
+}
+
+/* Text Area */
 .stTextArea textarea {
-    background-color: rgba(255,255,255,0.85);
+    background-color: white;
     color: black;
+    border-radius: 12px;
+    border: 2px solid #00d4ff;
+    font-size: 18px;
+    padding: 12px;
 }
 
+/* Dropdown */
 .stSelectbox div[data-baseweb="select"] {
-    background-color: rgba(255,255,255,0.85);
+    background-color: white;
     border-radius: 12px;
     color: black;
+    border: 2px solid #00d4ff;
 }
 
-
+/* Buttons */
 .stButton button {
-    background: linear-gradient(to right, #ff512f, #dd2476);
+    background: linear-gradient(to right, #00c6ff, #0072ff);
     color: white;
     font-size: 20px;
-    border-radius: 15px;
+    font-weight: bold;
+    border-radius: 12px;
     width: 100%;
     height: 55px;
     border: none;
-    font-weight: bold;
-    transition: 0.3s;
+    transition: 0.3s ease;
+    margin-top: 10px;
 }
 
+/* Hover */
 .stButton button:hover {
-    transform: scale(1.05);
-    background: linear-gradient(to right, #24c6dc, #514a9d);
+    transform: scale(1.02);
+    background: linear-gradient(to right, #0072ff, #00c6ff);
 }
 
-.result-box {
-    background: rgba(255,255,255,0.2);
-    padding: 20px;
-    border-radius: 15px;
-    margin-top: 25px;
-    font-size: 22px;
+/* Result Text */
+.result-text {
+    font-size: 30px;
     color: white;
-    border: 2px solid white;
+    font-weight: bold;
+    margin-top: 10px;
 }
 
 </style>
 """, unsafe_allow_html=True)
 
-# Main Container
-st.markdown('<div class="main-box">', unsafe_allow_html=True)
-
 # Title
-st.title("🌍 AI Language Translator")
+st.title("🌐 AI Voice Language Translator")
 
-# Text Input
-text = st.text_area("Enter Text")
-
-# Languages
+# Languages Dictionary
 languages = {
-    "English": "en",
-    "Tamil": "ta",
-    "Hindi": "hi",
-    "French": "fr",
-    "German": "de",
-    "Spanish": "es",
-    "Japanese": "ja",
+    "English": "en-IN",
+    "Tamil": "ta-IN",
+    "Hindi": "hi-IN",
+    "French": "fr-FR",
+    "German": "de-DE",
+    "Spanish": "es-ES",
+    "Japanese": "ja-JP",
     "Chinese": "zh-CN"
 }
 
-# Dropdowns
-source_lang = st.selectbox("Source Language", list(languages.keys()))
-target_lang = st.selectbox("Target Language", list(languages.keys()))
+# Session State
+if "voice_text" not in st.session_state:
+    st.session_state.voice_text = ""
+
+# Source Language
+source_lang = st.selectbox(
+    "🌍 Source Language",
+    list(languages.keys())
+)
+
+# Target Language
+target_lang = st.selectbox(
+    "🎯 Target Language",
+    list(languages.keys())
+)
+
+# Voice Input Button
+if st.button("🎤 Speak"):
+
+    recognizer = sr.Recognizer()
+
+    try:
+        with sr.Microphone() as source:
+
+            st.info("🎙 Speak Now...")
+
+            recognizer.adjust_for_ambient_noise(source)
+
+            audio = recognizer.listen(source)
+
+            # Recognize Speech Based on Selected Language
+            voice = recognizer.recognize_google(
+                audio,
+                language=languages[source_lang]
+            )
+
+            st.session_state.voice_text = voice
+
+            st.success(f"✅ You Said: {voice}")
+
+    except:
+        st.error("❌ Could not recognize voice")
+
+# Text Area
+text = st.text_area(
+    "✍ Enter Text or Use Voice",
+    value=st.session_state.voice_text
+)
 
 # Translate Button
-if st.button("✨ Translate Now"):
+if st.button("🚀 Translate Now"):
 
-    translated = GoogleTranslator(
-        source=languages[source_lang],
-        target=languages[target_lang]
-    ).translate(text)
+    if text.strip() == "":
+        st.warning("⚠ Please enter or speak some text")
 
-    st.markdown(
-        f"""
-        <div class="result-box">
-        <h3>✅ Translated Text</h3>
-        {translated}
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    else:
 
-st.markdown('</div>', unsafe_allow_html=True)
+        # Translation
+        translated = GoogleTranslator(
+            source=languages[source_lang].split("-")[0],
+            target=languages[target_lang].split("-")[0]
+        ).translate(text)
+
+        # Success Message
+        st.success("✅ Translation Completed")
+
+        # Heading
+        st.write("### 🔹 Translated Text")
+
+        # Output
+        st.markdown(
+            f'<div class="result-text">{translated}</div>',
+            unsafe_allow_html=True
+        )
+
+        # Text To Speech
+        tts = gTTS(
+            text=translated,
+            lang=languages[target_lang].split("-")[0]
+        )
+
+        # Save Audio
+        tts.save("translated_audio.mp3")
+
+        # Play Audio
+        audio_file = open("translated_audio.mp3", "rb")
+        audio_bytes = audio_file.read()
+
+        st.audio(audio_bytes, format="audio/mp3")
