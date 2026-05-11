@@ -4,7 +4,6 @@ This project is developed as part of the CodeAlpha Artificial Intelligence Inter
 
 ## Features
 - Text Translation
-- Voice Input
 - Voice Output
 - Multiple Language Support
 - Professional UI
